@@ -1,0 +1,87 @@
+name: "FHIR IG Action"
+description: "A GitHub Action for FHIR IGs."
+author: "Quentin Ligier"
+inputs:
+  ig-publisher:
+    description: "The IG Publisher version to use. 'latest' | 'x.y.z'"
+    required: false
+    default: "latest"
+  sushi:
+    description: "The SUSHI version to use. 'latest' | 'false' | 'x' | 'x.y' | 'x.y.z'"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Check the inputs"
+      shell: bash
+      run: ./check_inputs.sh ${{ inputs.ig-publisher }} ${{ inputs.sushi }}
+      working-directory: ${{ github.action_path }}
+
+    # Install Java 17 for the IG Publisher and the validation engine
+    # https://github.com/actions/setup-java
+    - name: "Install Java"
+      uses: actions/setup-java@v3
+      with:
+        distribution: "zulu"
+        java-version: "17"
+
+    # Install ruby
+    # https://github.com/ruby/setup-ruby
+    - name: "Install Ruby"
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: "3.2"
+
+    # Install Jekyll
+    # https://jekyllrb.com/docs/installation/ubuntu/
+    - name: "Install Jekyll"
+      shell: bash
+      run: |
+        gem install jekyll bundler
+        jekyll -v
+
+    # Install node if SUSHI is needed
+    # https://github.com/actions/setup-node
+    - name: "Install Node.js"
+      if: ${{ inputs.sushi != 'false' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: "18"
+
+    # Install SUSHI if needed
+    - name: "Install SUSHI"
+      if: ${{ inputs.sushi != 'false' }}
+      shell: bash
+      run: |
+        npm install -g fsh-sushi@${{ inputs.sushi }}
+        sushi --version
+
+    # Download the IG Publisher
+    - name: "Download the IG Publisher"
+      shell: bash
+      run: |
+        mkdir ./input-cache
+        curl -sS -L https://github.com/HL7/fhir-ig-publisher/releases/${{ inputs.ig-publisher }}/download/publisher.jar -o ./input-cache/publisher.jar
+        chmod +x ./input-cache/publisher.jar
+
+    # We can build the IG now
+    - name: "Build the IG"
+      shell: bash
+      env:
+        FORCE_COLOR: "true" # Force colors in SUSHI output
+        FORCE_FANCY_CHARACTERS: "true" # Force fancy characters in SUSHI output
+      # Here we enable problem matchers that will allow GitHub to parse errors and warnings in the CLI output
+      # See https://github.com/qligier/fhir-ig-action/wiki/Problem-matchers
+      run: |
+        echo "::add-matcher::${{ github.action_path }}/igpublisher-problem-matcher.json"
+        echo "::add-matcher::${{ github.action_path }}/sushi-problem-matcher.json"
+        java -Xmx4G -jar input-cache/publisher.jar ig.ini
+        echo "::remove-matcher owner=igpublisher::"
+        echo "::remove-matcher owner=sushi-error::"
+        echo "::remove-matcher owner=sushi-warning::"
+
+branding:
+  icon: "play"
+  color: "orange"
