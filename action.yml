@@ -4,74 +4,55 @@ description: "Worklow pour les IG de l'ANS"
 runs:
   using: "composite"
   steps:
-    - name: "Check the inputs"
-      shell: bash
-      run: ./check_inputs.sh ${{ inputs.ig-publisher }} ${{ inputs.sushi }}
-      working-directory: ${{ github.action_path }}
+      # Install .NET runtime
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.x.x'
 
-    # Install Java 17 for the IG Publisher and the validation engine
-    # https://github.com/actions/setup-java
-    - name: "Install Java"
-      uses: actions/setup-java@v3
-      with:
-        distribution: "zulu"
-        java-version: "17"
+          
+      # Install Java runtime (only needed if you want to run the offical HL7 Java validator)
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'microsoft'
+          java-version: '17'    
+          
+      - name : firely 
+        run : dotnet tool install --global Firely.Terminal --version 3.0.0  
 
-    # Install ruby
-    # https://github.com/ruby/setup-ruby
-    - name: "Install Ruby"
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: "3.2"
+      - name: Check Firely Terminal Version
+        run: |
+          CHECK_FIRELY_TERMINAL_VERSION=$(fhir -v | tr '\n' ' ') # Print everything in a single line
+          echo "FIRELY_TERMINAL_VERSION: $CHECK_FIRELY_TERMINAL_VERSION"
 
-    # Install Jekyll
-    # https://jekyllrb.com/docs/installation/ubuntu/
-    - name: "Install Jekyll"
-      shell: bash
-      run: |
-        gem install jekyll bundler
-        jekyll -v
+      - name: Run bake  ans.annuaire.fhir.r4
+        run: |
+          fhir install ans.annuaire.fhir.r4 0.2.0
+          fhir bake --package ans.annuaire.fhir.r4
+          
+      - name: Run bake hl7.fhir.fr.core
+        run: |
+          fhir install hl7.fhir.fr.core 1.1.0
+          fhir bake --package hl7.fhir.fr.core
 
-    # Install node if SUSHI is needed
-    # https://github.com/actions/setup-node
-    - name: "Install Node.js"
-      if: ${{ inputs.sushi != 'false' }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: "18"
+          
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
 
-    # Install SUSHI if needed
-    - name: "Install SUSHI"
-      if: ${{ inputs.sushi != 'false' }}
-      shell: bash
-      run: |
-        npm install -g fsh-sushi@${{ inputs.sushi }}
-        sushi --version
+      - name: 📥 Download pacth fr-core
+        run: |
+          wget -q https://github.com/ansforge/FIG_ans.workflows/blob/main/dependency/hl7.fhir.fr.core-1.1.0.tgz?raw=true -O ./hl7.fhir.fr.core-1.1.0.tgz
+          cp hl7.fhir.fr.core-1.1.0.tgz ~/.fhir/packages
+          tar -xzvf ~/.fhir/packages/hl7.fhir.fr.core-1.1.0.tgz     
 
-    # Download the IG Publisher
-    - name: "Download the IG Publisher"
-      shell: bash
-      run: |
-        mkdir ./input-cache
-        curl -sS -L https://github.com/HL7/fhir-ig-publisher/releases/${{ inputs.ig-publisher }}/download/publisher.jar -o ./input-cache/publisher.jar
-        chmod +x ./input-cache/publisher.jar
+          
+      - name: Install modules
+        run: npm install -g fsh-sushi
 
-    # We can build the IG now
-    - name: "Build the IG"
-      shell: bash
-      env:
-        FORCE_COLOR: "true" # Force colors in SUSHI output
-        FORCE_FANCY_CHARACTERS: "true" # Force fancy characters in SUSHI output
-      # Here we enable problem matchers that will allow GitHub to parse errors and warnings in the CLI output
-      # See https://github.com/qligier/fhir-ig-action/wiki/Problem-matchers
-      run: |
-        echo "::add-matcher::${{ github.action_path }}/igpublisher-problem-matcher.json"
-        echo "::add-matcher::${{ github.action_path }}/sushi-problem-matcher.json"
-        java -Xmx4G -jar input-cache/publisher.jar ig.ini
-        echo "::remove-matcher owner=igpublisher::"
-        echo "::remove-matcher owner=sushi-error::"
-        echo "::remove-matcher owner=sushi-warning::"
-
-branding:
-  icon: "play"
-  color: "orange"
+       - uses: actions/checkout@v3
+       
+      - name: Run sushi
+        run: sushi .
+          
