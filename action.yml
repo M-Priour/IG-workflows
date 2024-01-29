@@ -1,15 +1,5 @@
 name: "FHIR IG Action"
-description: "A GitHub Action for FHIR IGs."
-author: "Quentin Ligier"
-inputs:
-  ig-publisher:
-    description: "The IG Publisher version to use. 'latest' | 'x.y.z'"
-    required: false
-    default: "latest"
-  sushi:
-    description: "The SUSHI version to use. 'latest' | 'false' | 'x' | 'x.y' | 'x.y.z'"
-    required: false
-    default: "false"
+description: "Worklow pour les IG de l'ANS"
 
 runs:
   using: "composite"
