@@ -19,19 +19,23 @@ runs:
           java-version: '17'    
           
       - name : firely 
+        shell: bash      
         run : dotnet tool install --global Firely.Terminal --version 3.0.0  
 
       - name: Check Firely Terminal Version
+        shell: bash      
         run: |
           CHECK_FIRELY_TERMINAL_VERSION=$(fhir -v | tr '\n' ' ') # Print everything in a single line
           echo "FIRELY_TERMINAL_VERSION: $CHECK_FIRELY_TERMINAL_VERSION"
 
       - name: Run bake  ans.annuaire.fhir.r4
+        shell: bash            
         run: |
           fhir install ans.annuaire.fhir.r4 0.2.0
           fhir bake --package ans.annuaire.fhir.r4
           
       - name: Run bake hl7.fhir.fr.core
+        shell: bash            
         run: |
           fhir install hl7.fhir.fr.core 1.1.0
           fhir bake --package hl7.fhir.fr.core
@@ -42,6 +46,7 @@ runs:
           node-version: 16
 
       - name: 📥 Download pacth fr-core
+        shell: bash            
         run: |
           wget -q https://github.com/ansforge/FIG_ans.workflows/blob/main/dependency/hl7.fhir.fr.core-1.1.0.tgz?raw=true -O ./hl7.fhir.fr.core-1.1.0.tgz
           cp hl7.fhir.fr.core-1.1.0.tgz ~/.fhir/packages
@@ -49,10 +54,12 @@ runs:
 
           
       - name: Install modules
+        shell: bash            
         run: npm install -g fsh-sushi
 
        - uses: actions/checkout@v3
        
       - name: Run sushi
+        shell: bash      
         run: sushi .
           
