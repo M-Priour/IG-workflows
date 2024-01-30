@@ -19,6 +19,11 @@ inputs:
     description: "Permet de lancer le validator CLI"
     required: false
     default: "false"
+  termino_server:
+    description: "Url du serveur de terminologie"
+    required: false
+    default: "http://tx.fhir.org"
+
 
 runs:
   using: "composite"
@@ -118,7 +123,7 @@ runs:
         shell: bash          
         run : |
               cd  ${{ inputs.repo_ig}}
-              java -Xmx8192m -jar ../publisher.jar  -ig .
+              java -Xmx8192m -jar ../publisher.jar  -ig . -tx  ${{ inputs.termino_server }}
 
       - name: Get branch names
         id: branch-name
