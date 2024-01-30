@@ -4,9 +4,6 @@ description: "Worklow pour les IG de l'ANS"
 runs:
   using: "composite"
   steps:
-      - uses: actions/checkout@v3
-        with:      
-          path: igSource
 
           
       # Install .NET runtime
