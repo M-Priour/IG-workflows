@@ -3,63 +3,86 @@ description: "Worklow pour les IG de l'ANS"
 inputs:
   github_token:
     description: 'Set a generated GITHUB_TOKEN for pushing to the remote branch.'
+    required: true
+  repo_ig:
+    description: 'Chemin d'accés au répertoire de l'IG'
+    required: true
+  bake:
+    description: "Permet de mettre reprendre les projets annuaire et FrCore de simplifier"
     required: false
+    default: "false"
+  nos:
+    description: "Permet d'installer le nos a partir du ZIP"
+    required: false
+    default: "false"
+  validator_cli:
+    description: "Permet de lancer le validator CLI"
+    required: false
+    default: "false"
+
 runs:
   using: "composite"
   steps:
 
-          
-      # Install .NET runtime
-      - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '6.x.x'
-
-      - name: 📥 Download test tools
-        shell: bash            
-        run: |
-          wget -q https://github.com/hapifhir/org.hl7.fhir.core/releases/latest/download/validator_cli.jar
-          
-      # Install Java runtime (only needed if you want to run the offical HL7 Java validator)
       - name: Setup Java JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'microsoft'
           java-version: '17'    
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
           
+      # Install .NET runtime
+      - if: ${{ inputs.bake == 'true' }}      
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.x.x'
+
+      - if: ${{ inputs.bake == 'true' }}             
       - name : firely 
         shell: bash      
         run : dotnet tool install --global Firely.Terminal --version 3.0.0  
 
+      - if: ${{ inputs.bake == 'true' }}   
       - name: Check Firely Terminal Version
         shell: bash      
         run: |
           CHECK_FIRELY_TERMINAL_VERSION=$(fhir -v | tr '\n' ' ') # Print everything in a single line
           echo "FIRELY_TERMINAL_VERSION: $CHECK_FIRELY_TERMINAL_VERSION"
 
+      - if: ${{ inputs.bake == 'true' }}   
       - name: Run bake  ans.annuaire.fhir.r4
         shell: bash            
         run: |
           fhir install ans.annuaire.fhir.r4 0.2.0
           fhir bake --package ans.annuaire.fhir.r4
-          
+
+      - if: ${{ inputs.bake == 'true' }}             
       - name: Run bake hl7.fhir.fr.core
         shell: bash            
         run: |
           fhir install hl7.fhir.fr.core 1.1.0
           fhir bake --package hl7.fhir.fr.core
 
-          
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
+      - if: ${{ inputs.bake == 'true' }}     
       - name: 📥 Download pacth fr-core
         shell: bash            
         run: |
           wget -q https://github.com/ansforge/FIG_ans.workflows/blob/main/dependency/hl7.fhir.fr.core-1.1.0.tgz?raw=true -O ./hl7.fhir.fr.core-1.1.0.tgz
           cp hl7.fhir.fr.core-1.1.0.tgz ~/.fhir/packages
           tar -xzvf ~/.fhir/packages/hl7.fhir.fr.core-1.1.0.tgz     
+
+      - if: ${{ inputs.nos == 'true' }}             
+      - name : Install NOS
+        shell: bash       
+        run: |
+          mkdir /home/runner/.fhir/packages/nos
+          wget -q https://esante.gouv.fr/sites/default/files/media_entity/documents/NOS-Fichiers_Publics-Versions_json_fhir.zip
+          unzip NOS-Fichiers_Publics-Versions_json_fhir.zip -d /home/runner/.fhir/packages/nos         
 
           
       - name: Install modules
@@ -69,16 +92,6 @@ runs:
       - name: Run sushi
         shell: bash      
         run: sushi ./igSource
-          
-      - name : Install NOS
-        shell: bash       
-        run: |
-          mkdir /home/runner/.fhir/packages/nos
-          wget -q https://esante.gouv.fr/sites/default/files/media_entity/documents/NOS-Fichiers_Publics-Versions_json_fhir.zip
-          unzip NOS-Fichiers_Publics-Versions_json_fhir.zip -d /home/runner/.fhir/packages/nos          
-
-
-
 
 
       # Downloads the newest version of the IG Publisher, this could probable be cached.
@@ -104,21 +117,7 @@ runs:
       - name: Get branch names
         id: branch-name
         uses: tj-actions/branch-names@v4.3
-          
-          
-      - name: ✔️ Run tests
-        shell: bash       
-        run: |
-              cd ./igSource
-              java -jar ../validator_cli.jar  ./fsh-generated/resources -ig ans.annuaire.fhir.r4#0.2.0 -ig hl7.fhir.fr.core#1.1.0 -ig /home/runner/.fhir/packages/nos -recurse -verbose -output-style compact -output ../rapport.html
-        continue-on-error: true
-        
-      - name: Generate list using Markdown
-        shell: bash       
-        run: |
-          echo "### Rapport de validation (validator_cli)  :rocket:" >> $GITHUB_STEP_SUMMARY
-          cat rapport.html >> $GITHUB_STEP_SUMMARY
-        
+
       # Publishes the HTML page to a seperate branch in order to host it using GitHub-Pages.
       # This will overwrite the currently published HTML page.
       - name: 🚀 Deploy to GitHub-Pages
@@ -129,6 +128,28 @@ runs:
           destination_dir: ig/${{ steps.branch-name.outputs.current_branch }}
           exclude_assets: '**.zip,**.tgz,**.pack'
           commit_message: ' ${{ github.event.head_commit.message }}'
+          
+      - if: ${{ inputs.validator_cli == 'true' }}     
+      - name: 📥 Download test tools
+        shell: bash            
+        run: |
+          wget -q https://github.com/hapifhir/org.hl7.fhir.core/releases/latest/download/validator_cli.jar
+
+      - if: ${{ inputs.validator_cli == 'true' }}             
+      - name: ✔️ Run tests
+        shell: bash       
+        run: |
+              cd ./igSource
+              java -jar ../validator_cli.jar  ./fsh-generated/resources -ig ans.annuaire.fhir.r4#0.2.0 -ig hl7.fhir.fr.core#1.1.0 -ig /home/runner/.fhir/packages/nos -recurse -verbose -output-style compact -output ../rapport.html
+        continue-on-error: true
+
+      - if: ${{ inputs.validator_cli == 'true' }}           
+      - name: Generate list using Markdown
+        shell: bash       
+        run: |
+          echo "### Rapport de validation (validator_cli)  :rocket:" >> $GITHUB_STEP_SUMMARY
+          cat rapport.html >> $GITHUB_STEP_SUMMARY
+        
 
 branding:
   icon: 'check'
