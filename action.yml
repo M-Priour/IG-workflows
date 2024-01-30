@@ -1,6 +1,9 @@
 name: "FHIR IG Action"
 description: "Worklow pour les IG de l'ANS"
-
+inputs:
+  github_token:
+    description: 'Set a generated GITHUB_TOKEN for pushing to the remote branch.'
+    required: true
 runs:
   using: "composite"
   steps:
