@@ -124,7 +124,7 @@ runs:
       - name: 🚀 Deploy to GitHub-Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ github.event.inputs.name }}
+          github_token: ${{ github.event.inputs.github_token }}
           publish_dir: ./ig/output
           destination_dir: ig/${{ steps.branch-name.outputs.current_branch }}
           exclude_assets: '**.zip,**.tgz,**.pack'
