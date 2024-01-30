@@ -97,7 +97,7 @@ runs:
        
       - name: Run sushi
         shell: bash      
-        run: sushi ./igSource
+        run: sushi ./ ${{ inputs.repo_ig}}
 
 
       # Downloads the newest version of the IG Publisher, this could probable be cached.
@@ -117,7 +117,7 @@ runs:
       - name: 🏃‍♂️ Run IG Publisher
         shell: bash          
         run : |
-              cd ./igSource
+              cd  ${{ inputs.repo_ig}}
               java -Xmx8192m -jar ../publisher.jar  -ig .
 
       - name: Get branch names
@@ -147,7 +147,7 @@ runs:
         if: ${{ inputs.validator_cli == 'true' }}  
         shell: bash       
         run: |
-              cd ./igSource
+              cd  ${{ inputs.repo_ig}}
               java -jar ../validator_cli.jar  ./fsh-generated/resources -ig ans.annuaire.fhir.r4#0.2.0 -ig hl7.fhir.fr.core#1.1.0 -ig /home/runner/.fhir/packages/nos -recurse -verbose -output-style compact -output ../rapport.html
         continue-on-error: true
 
