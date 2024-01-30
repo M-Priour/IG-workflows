@@ -97,7 +97,7 @@ runs:
        
       - name: Run sushi
         shell: bash      
-        run: sushi ./ ${{ inputs.repo_ig}}
+        run: sushi  ${{ inputs.repo_ig}}
 
 
       # Downloads the newest version of the IG Publisher, this could probable be cached.
