@@ -77,11 +77,7 @@ runs:
           wget -q https://esante.gouv.fr/sites/default/files/media_entity/documents/NOS-Fichiers_Publics-Versions_json_fhir.zip
           unzip NOS-Fichiers_Publics-Versions_json_fhir.zip -d /home/runner/.fhir/packages/nos          
 
-          
-      - name: ✔️ Run tests
-        shell: bash       
-        run: java -jar validator_cli.jar  ./ig/fsh-generated/resources -ig ans.annuaire.fhir.r4#0.2.0 -ig hl7.fhir.fr.core#1.1.0 -ig /home/runner/.fhir/packages/nos -recurse -verbose -output-style compact -output rapport.html
-        continue-on-error: true
+
 
       - name: Generate list using Markdown
         shell: bash       
@@ -111,6 +107,12 @@ runs:
         id: branch-name
         uses: tj-actions/branch-names@v4.3
           
+          
+      - name: ✔️ Run tests
+        shell: bash       
+        run: java -jar validator_cli.jar  ./ig/fsh-generated/resources -ig ans.annuaire.fhir.r4#0.2.0 -ig hl7.fhir.fr.core#1.1.0 -ig /home/runner/.fhir/packages/nos -recurse -verbose -output-style compact -output rapport.html
+        continue-on-error: true
+
         
       # Publishes the HTML page to a seperate branch in order to host it using GitHub-Pages.
       # This will overwrite the currently published HTML page.
