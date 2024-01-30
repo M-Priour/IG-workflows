@@ -64,5 +64,23 @@ runs:
        
       - name: Run sushi
         shell: bash      
-        run: sushi .
+        run: sushi ./ig
           
+      - name : Install NOS
+        shell: bash       
+        run: |
+          mkdir /home/runner/.fhir/packages/nos
+          wget -q https://esante.gouv.fr/sites/default/files/media_entity/documents/NOS-Fichiers_Publics-Versions_json_fhir.zip
+          unzip NOS-Fichiers_Publics-Versions_json_fhir.zip -d /home/runner/.fhir/packages/nos          
+
+          
+      - name: ✔️ Run tests
+        shell: bash       
+        run: java -jar validator_cli.jar  ./ig/fsh-generated/resources -ig ans.annuaire.fhir.r4#0.2.0 -ig hl7.fhir.fr.core#1.1.0 -ig /home/runner/.fhir/packages/nos -recurse -verbose -output-style compact -output rapport.html
+        continue-on-error: true
+
+      - name: Generate list using Markdown
+        shell: bash       
+        run: |
+          echo "### Rapport de validation (validator_cli)  :rocket:" >> $GITHUB_STEP_SUMMARY
+          cat rapport.html >> $GITHUB_STEP_SUMMARY
