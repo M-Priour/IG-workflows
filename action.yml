@@ -1,5 +1,9 @@
 name: "FHIR IG Action"
 description: "Worklow pour les IG de l'ANS"
+inputs:
+  github_token:
+    description: 'Set a generated GITHUB_TOKEN for pushing to the remote branch.'
+    required: false
 runs:
   using: "composite"
   steps:
@@ -120,7 +124,7 @@ runs:
       - name: 🚀 Deploy to GitHub-Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ inputs.github_token }}
           publish_dir: ./ig/output
           destination_dir: ig/${{ steps.branch-name.outputs.current_branch }}
           exclude_assets: '**.zip,**.tgz,**.pack'
