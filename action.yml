@@ -1,7 +1,5 @@
 name: "FHIR IG Action"
 description: "Worklow pour les IG de l'ANS"
-inputs:
-
 runs:
   using: "composite"
   steps:
@@ -122,11 +120,12 @@ runs:
       - name: 🚀 Deploy to GitHub-Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./ig/output
           destination_dir: ig/${{ steps.branch-name.outputs.current_branch }}
           exclude_assets: '**.zip,**.tgz,**.pack'
           commit_message: ' ${{ github.event.head_commit.message }}'
-        secrets:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+
 
           
