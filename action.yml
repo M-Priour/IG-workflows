@@ -96,7 +96,7 @@ runs:
         shell: bash          
         run : |
               cd ./igSource
-              java -Xmx8192m -jar publisher.jar  -ig .
+              java -Xmx8192m -jar ../publisher.jar  -ig .
 
       - name: Get branch names
         id: branch-name
