@@ -5,7 +5,7 @@ inputs:
     description: 'Set a generated GITHUB_TOKEN for pushing to the remote branch.'
     required: true
   repo_ig:
-    description: 'Chemin d'accés au répertoire de l'IG'
+    description: 'Chemin d'acces au répertoire de l'IG'
     required: true
   bake:
     description: "Permet de mettre reprendre les projets annuaire et FrCore de simplifier"
