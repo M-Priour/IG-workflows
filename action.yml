@@ -97,7 +97,9 @@ runs:
       # Builds the HTML page for the IG.
       - name: 🏃‍♂️ Run IG Publisher
         shell: bash          
-        run : java -Xmx8192m -jar publisher.jar  -ig ./igSource
+        run : |
+              cd ./igSource
+              java -Xmx8192m -jar publisher.jar  -ig .
 
       - name: Get branch names
         id: branch-name
