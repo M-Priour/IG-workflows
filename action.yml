@@ -6,7 +6,7 @@ runs:
   steps:
       - uses: actions/checkout@v3
         with:      
-          path: ig
+          path: igSource
 
           
       # Install .NET runtime
@@ -68,7 +68,7 @@ runs:
        
       - name: Run sushi
         shell: bash      
-        run: sushi ./ig
+        run: sushi ./igSource
           
       - name : Install NOS
         shell: bash       
@@ -97,7 +97,7 @@ runs:
       # Builds the HTML page for the IG.
       - name: 🏃‍♂️ Run IG Publisher
         shell: bash          
-        run : java -Xmx8192m -jar publisher.jar  -ig ./ig
+        run : java -Xmx8192m -jar publisher.jar  -ig ./igSource
 
       - name: Get branch names
         id: branch-name
