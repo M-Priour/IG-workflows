@@ -130,6 +130,8 @@ runs:
           exclude_assets: '**.zip,**.tgz,**.pack'
           commit_message: ' ${{ github.event.head_commit.message }}'
 
-
+branding:
+  icon: 'check'
+  color: 'blue'
 
           
