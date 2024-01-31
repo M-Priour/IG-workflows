@@ -26,7 +26,7 @@ inputs:
   publish_repo:
     description: "Repo de publciation de l'IG"
     required: false
-    default: "false"
+    default: ""
 
 runs:
   using: "composite"
@@ -169,19 +169,24 @@ runs:
 
 
 #####Release###########
-      - name: Get IG-website-release
+      - name: Get publish_repo
+        if: ${{ inputs.publish_repo != '' }}       
         uses: actions/checkout@main
         with:
           persist-credentials: false
           repository:  ${{ inputs.publish_repo}}
           path: IG-website-release
   
-      - name: Init        
+      - name: Init   publish_repo  
+        if: ${{ inputs.publish_repo != '' }}             
+        shell: bash        
         run: |
           cd  IG-website-release
           git submodule update --init --recursive
           
       - name: 🏃‍♂️ Run  Publisher to release
+        if: ${{ inputs.publish_repo != '' }}  
+        shell: bash                
         run :   java -jar publisher.jar -go-publish  -source  ${{ inputs.repo_ig}}  -web  ./IG-website-release/www/ig/fhir -registry ./IG-website-release/ig-registry/fhir-ig-list.json -history ./IG-website-release/fhir-ig-history-template -templates ./IG-website-release/templates 
                 
 
