@@ -27,7 +27,10 @@ inputs:
     description: "Repo de publciation de l'IG"
     required: false
     default: ""
-
+  publish_repo_token:
+    description: "Token pour publier sur le repo"
+    required: false
+    default: ""
 runs:
   using: "composite"
   steps:
@@ -189,6 +192,27 @@ runs:
         shell: bash                
         run :   java -jar publisher.jar -go-publish  -source  ${{ inputs.repo_ig}}  -web  ./IG-website-release/www/ig/fhir -registry ./IG-website-release/ig-registry/fhir-ig-list.json -history ./IG-website-release/fhir-ig-history-template -templates ./IG-website-release/templates 
                 
+
+
+      - name: Commit change
+        if: ${{ inputs.publish_repo != '' }}  
+        shell: bash              
+        run: |
+          cd  IG-website-release
+          git config user.name github-actions
+          git config user.email github-actions@esante.gouv.fr
+          git add -A 
+          git commit -m updated
+          
+      - name: Push changes 
+        if: ${{ inputs.publish_repo != '' }}  
+        shell: bash              
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ inputs.publish_repo_token}}
+          directory: IG-website-release
+          repository : ${{ inputs.publish_repo}}
+
 
 branding:
   icon: 'check'
