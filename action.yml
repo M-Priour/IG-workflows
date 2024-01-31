@@ -23,7 +23,10 @@ inputs:
     description: "Url du serveur de terminologie"
     required: false
     default: "http://tx.fhir.org"
-
+  publish_repo:
+    description: "Repo de publciation de l'IG"
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -163,7 +166,24 @@ runs:
         run: |
           echo "### Rapport de validation (validator_cli)  :rocket:" >> $GITHUB_STEP_SUMMARY
           cat rapport.html >> $GITHUB_STEP_SUMMARY
-        
+
+
+#####Release###########
+      - name: Get IG-website-release
+        uses: actions/checkout@main
+        with:
+          persist-credentials: false
+          repository:  ${{ inputs.publish_repo}}
+          path: IG-website-release
+  
+      - name: Init        
+        run: |
+          cd  IG-website-release
+          git submodule update --init --recursive
+          
+      - name: 🏃‍♂️ Run  Publisher to release
+        run :   java -jar publisher.jar -go-publish  -source  ${{ inputs.repo_ig}}  -web  ./IG-website-release/www/ig/fhir -registry ./IG-website-release/ig-registry/fhir-ig-list.json -history ./IG-website-release/fhir-ig-history-template -templates ./IG-website-release/templates 
+                
 
 branding:
   icon: 'check'
