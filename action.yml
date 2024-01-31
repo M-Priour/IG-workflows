@@ -210,8 +210,7 @@ runs:
           git commit -m updated
           
       - name: Push changes 
-        if: ${{ inputs.publish_repo != '' }}  
-        shell: bash              
+        if: ${{ inputs.publish_repo != '' }}          
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ inputs.publish_repo_token}}
